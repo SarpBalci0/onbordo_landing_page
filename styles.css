@@ -1,0 +1,2271 @@
+/* ============================================================
+   ONBORDO — SKELETON STYLESHEET
+   Aşama 1: sadece yapı. Renk yok (marka rengi eklenmedi),
+   gerçek metin yok. Amaç: grid/divider sistemi + nav/sticky-scroll
+   davranışlarının doğru çalıştığını görmek.
+   ============================================================ */
+
+/* -----------------------------------------------------------
+   1. TOKENS
+   Bunlar geçici "skeleton" değerleri. Aşama 3'te marka
+   renkleri (lime #e3ff8f, Onest font vb.) buraya işlenecek.
+   ----------------------------------------------------------- */
+:root {
+  /* Onbordo marka paleti — üründen doğrulanmış değerler */
+  --bg: #ffffff;
+  --surface: #f6f6f4; /* zaman zaman kullanılacak açık gri bant */
+  --fg: #0a0a0a; /* siyah — noktasal kullanım: CTA, vurgulu metin */
+  --muted: #6b6b6b;
+  --accent: #e3ff8f; /* koyuya yakın lime — birincil vurgu */
+  --accent-fg: #0a0a0a; /* lime zemin üstünde okunabilir metin rengi */
+  --line: rgba(228, 228, 231, 0.55); /* opaklığı düşürüldü — "wireframe hissi"ni azaltmak için */
+
+  /* Feature-scroll arka planı — Sarp'ın vereceği dağ/deniz manzarası
+     buraya gelecek. ŞİMDİLİK BOŞ (none) — placeholder gradient
+     kullanılıyor. Foto geldiğinde SADECE bu satırı değiştirmek yeterli:
+     --feature-scroll-bg-image: url('assets/feature-scroll-bg.jpg'); */
+  --feature-scroll-bg-image: none;
+
+  /* skeleton placeholder tonları — henüz doldurulmamış içerik alanları için */
+  --placeholder: #e9e9e9;
+  --placeholder-strong: #d4d4d4;
+
+  /* layout — nav ölçümleri DevTools'tan doğrulandı
+     1800px'de: 120px gutter · 800px'de: 20px gutter
+     ikisi arası clamp() ile yumuşak geçiş yapılıyor */
+  --container-max: 1560px;
+  --gutter: clamp(20px, calc(20px + (100vw - 800px) * 0.1), 120px);
+  --nav-height: 70px; /* her iki genişlikte de sabit ölçüldü */
+
+  /* spacing scale (8px tabanlı) */
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-5: 48px;
+  --space-6: 64px;
+  --space-7: 96px;
+  --space-8: 128px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+body {
+  margin: 0;
+  background: #0a0a0a;
+  color: var(--fg);
+  font-family: 'Onest', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* -----------------------------------------------------------
+   2. CONTAINER + DİKEY ÇİZGİ GRID SİSTEMİ
+   Dify referansındaki "açık boşluk yerine ince dikey ayraç"
+   deseni. .divided-row içindeki her .col arasına otomatik
+   border ekleniyor — böylece section'lar bunu manuel eklemek
+   zorunda kalmıyor.
+   ----------------------------------------------------------- */
+.container {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+.divided-row {
+  display: grid;
+}
+
+.divided-row > .col {
+  border-right: 1.5px solid var(--line);
+  padding: var(--space-4) var(--space-3);
+}
+
+.divided-row > .col:last-child {
+  border-right: none;
+}
+
+/* -----------------------------------------------------------
+   3b. SAYFA ÇERÇEVESİ — hero'dan footer'a kadar kesintisiz iki
+   dikey çizgi. Her section kendi dış çizgisini ayrı ayrı
+   çizmek yerine (dikiş/kayma riski), tek bir kaynaktan geliyor.
+   Container'la aynı --gutter değerini kullanıyor, bu yüzden
+   her yerde otomatik hizalı.
+   ----------------------------------------------------------- */
+.page-frame {
+  position: relative;
+  /* -18px: çizgileri içerikten biraz uzaklaştırıp ekran kenarına
+     doğru kaydırmak için (görsel nefes payı). */
+  --frame-offset: calc(max(0px, (100vw - var(--container-max)) / 2) + var(--gutter) - 18px);
+}
+
+.page-frame::before,
+.page-frame::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1.5px;
+  background: var(--line);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.page-frame::before {
+  left: var(--frame-offset);
+}
+
+.page-frame::after {
+  right: var(--frame-offset);
+}
+
+/* -----------------------------------------------------------
+   3. NAV
+   Üç davranış durumu:
+   a) .nav--visible   → normal, en üstte
+   b) .nav--hidden     → aşağı scroll'da yukarı kayıp gizlenir
+   c) .nav--secondary  → sticky-scroll bölümünde ikincil nav'a döner
+   ----------------------------------------------------------- */
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--nav-height);
+  z-index: 100;
+  background: rgba(10, 10, 10, 0.8);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  border-bottom: 1.5px solid rgba(255, 255, 255, 0.12);
+  transform: translateY(0);
+  transition: transform 220ms ease;
+}
+
+.nav--hidden {
+  transform: translateY(-100%);
+}
+
+.nav .container {
+  height: 100%;
+  display: grid;
+  grid-template-columns: 3fr 1fr;
+  align-items: center;
+}
+
+.nav__left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.nav__actions {
+  display: flex;
+}
+
+.nav__logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: #ffffff;
+}
+
+.nav__logo-icon {
+  width: 26px;
+  height: auto;
+  display: block;
+  /* logo.png koyu renkli — siyah nav zemininde görünmesi için
+     beyaza çevriliyor. */
+  filter: brightness(0) invert(1);
+}
+
+.nav__logo-text {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.nav__links {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.nav__link {
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.nav__link:hover {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.nav__actions .btn-ph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 10px 0;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 250ms cubic-bezier(.2,.8,.2,1), box-shadow 250ms cubic-bezier(.2,.8,.2,1);
+}
+
+.nav__actions .btn-ph.primary {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+
+.nav__actions .btn-ph.primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px -8px rgba(227, 255, 143, 0.9);
+}
+
+/* İkincil nav — sticky-scroll bölümüne girildiğinde ana nav'ın
+   üstüne binen, o bölümün alt-adımlarını listeleyen mini menü. */
+.nav-secondary {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--nav-height);
+  z-index: 101;
+  background: var(--fg);
+  color: var(--bg);
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-100%);
+  transition: transform 220ms ease, opacity 220ms ease;
+}
+
+.nav-secondary.is-active {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.nav-secondary .container {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.nav-secondary__step {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  padding: var(--space-1) 0;
+  border-bottom: 2px solid transparent;
+}
+
+.nav-secondary__step.is-current {
+  color: var(--bg);
+  border-bottom-color: var(--bg);
+}
+
+/* -----------------------------------------------------------
+   4. HERO
+   Dify pricing hero'sunun grid mantığı: sola yaslı metin +
+   dikey çizgilerle bölünmüş boş kolonlar. Çerçeveli kutu
+   yaklaşımı terk edildi.
+   ----------------------------------------------------------- */
+/* -----------------------------------------------------------
+   3c. HERO-VIEWPORT — hero + stats bandını TEK 100vh ekranda
+   birleştiren sarmalayıcı. Arka plan, sitenin geri kalanıyla
+   (MacBook scroll, footer) aynı düz koyu gradyan — OGL particles
+   ("galaksi") efekti kaldırıldı. Sayfa açılır açılmaz kullanıcı
+   scroll yapmadan hem hero'yu hem stats bandını görür.
+   ----------------------------------------------------------- */
+.hero-viewport {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--nav-height);
+  overflow: hidden;
+  background: #0a0a0a;
+}
+
+.hero-viewport .hero {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+}
+
+.hero {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero > .container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+.hero__grid {
+  grid-template-columns: 3fr 1fr;
+  grid-auto-flow: row;
+}
+
+.hero__grid > .col:nth-child(n + 3) {
+  border-top: 1.5px solid var(--line);
+}
+
+.hero__grid > .hero__text {
+  min-height: 460px;
+  display: flex;
+  align-items: center;
+  /* Metin ile sağdaki kart sütunu arasındaki iç çizgi kaldırıldı —
+     görsel olarak gereksiz kesiyordu. NOT: .divided-row > .col
+     kuralı .hero__text'ten daha spesifik olduğu için, override'ın
+     tutması için burada da aynı ">" birleştiricisini kullanıyoruz. */
+  border-right: none;
+}
+
+.hero__subtext-cell {
+  display: flex;
+  align-items: center;
+}
+
+.hero__grid > .hero__mark-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Aynı specificity notu: varsayılan iç çizgi burada da ">" ile
+     eziliyor, yerine aşağıdaki ::after ile page-frame çizgisine
+     tam değecek şekilde uzatılmış bir çizgi çiziliyor. */
+  border-right: none;
+}
+
+.hero__mark-cell::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  /* page-frame çizgilerini 18px dışa kaydırmıştık (bkz. --frame-offset) —
+     bu çizgi de aynı miktarda uzatılınca tam ona değiyor. */
+  right: -18px;
+  width: 1.5px;
+  background: var(--line);
+}
+
+.hero__mark {
+  margin: 0;
+  z-index: 2;
+}
+
+.hero__mark-icon {
+  width: 64px;
+  height: auto;
+  display: block;
+  transform-origin: center;
+  animation: heroMarkPulse 6s ease-in-out infinite;
+}
+
+@keyframes heroMarkPulse {
+  0% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.1) rotate(180deg); }
+  100% { transform: scale(1) rotate(360deg); }
+}
+
+/* Yüzen ürün kartları — hero'ya derinlik katmak için */
+.hero__float {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(228, 228, 231, 0.8);
+  border-radius: 14px;
+  box-shadow: 0 20px 40px -16px rgba(0, 0, 0, 0.18);
+  z-index: 3;
+}
+
+.hero__float--candidate {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  top: 0;
+  right: 0;
+  transform: rotate(-3deg);
+  animation: heroFloatBob 7s ease-in-out infinite;
+}
+
+.hero__float-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--placeholder-strong);
+  flex-shrink: 0;
+}
+
+.hero__float-name {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.hero__float-role {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.hero__float-badge {
+  margin-left: 6px;
+  padding: 3px 8px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.hero__float--pipeline {
+  padding: 14px 18px;
+  top: 110px;
+  right: 0;
+  transform: rotate(3deg);
+  animation: heroFloatBob 8s ease-in-out infinite 1.2s;
+}
+
+.hero__float-label {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.hero__float-stages {
+  display: flex;
+  gap: 4px;
+}
+
+.hero__float-stage {
+  width: 22px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.hero__float-stage--done {
+  background: var(--accent);
+}
+
+.hero__float-stage--active {
+  background: var(--accent);
+  opacity: 0.5;
+}
+
+@keyframes heroFloatBob {
+  0%, 100% { transform: translateY(0) rotate(var(--rot, 0deg)); }
+  50% { transform: translateY(-8px) rotate(var(--rot, 0deg)); }
+}
+
+.hero__float--candidate { --rot: -3deg; }
+.hero__float--pipeline { --rot: 3deg; }
+
+.hero__float--ai {
+  padding: 14px 16px;
+  width: 175px;
+  top: 110px;
+  left: 4px;
+  transform: rotate(2deg);
+  animation: heroFloatBob 9s ease-in-out infinite 0.6s;
+  --rot: 2deg;
+}
+
+.hero__float-ai-text {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--fg);
+}
+
+.hero__float--notif {
+  width: 235px;
+  padding: 14px 16px;
+  top: 230px;
+  left: 52px;
+  transform: rotate(-2deg);
+  animation: heroFloatBob 8.5s ease-in-out infinite 1.8s;
+  --rot: -2deg;
+}
+
+.hero__notif-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: hidden;
+  max-height: 116px;
+}
+
+.hero__notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(-10px);
+  animation: heroNotifIn 400ms ease forwards;
+}
+
+@keyframes heroNotifIn {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hero__notif-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--surface);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero__notif-icon svg {
+  width: 11px;
+  height: 11px;
+  color: var(--fg);
+}
+
+.hero__notif-text {
+  min-width: 0;
+}
+
+.hero__notif-title {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hero__notif-body {
+  margin: 0;
+  font-size: 10px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__float--candidate,
+  .hero__float--pipeline,
+  .hero__mark-icon {
+    animation: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .hero__float {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__mark-icon {
+    animation: none;
+  }
+}
+
+.hero__grid {
+  --line: rgba(255, 255, 255, 0.22);
+}
+
+.hero__headline {
+  margin: 0;
+  font-size: clamp(36px, 4vw, 52px);
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+
+/* Yazma (typewriter) animasyonu — React Bits'in TextType bileşeninden
+   ilhamla, framer-motion/GSAP bağımlılığı olmadan vanilla JS'e taşındı.
+   .text-type__content JS tarafından karakter karakter dolduruluyor;
+   imleç sürekli yanıp sönüyor (referans bileşenin varsayılan davranışı
+   — yazarken de sonra da görünür kalıyor). */
+.text-type__cursor {
+  display: inline-block;
+  margin-left: 4px;
+  font-weight: 400;
+  animation: heroCursorBlink 0.9s steps(1) infinite;
+}
+
+@keyframes heroCursorBlink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .text-type__cursor {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+.hero__subtext {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+@media (max-width: 768px) {
+  .hero__grid {
+    grid-template-columns: 1fr;
+  }
+  .hero__text {
+    min-height: auto;
+  }
+}
+
+/* -----------------------------------------------------------
+   4b. ALT SAYFA HERO ŞABLONU (Product/Solutions/Resources/Pricing ortak)
+   Dify pricing sayfasının SADECE üst kısmı — plan kartları/toggle
+   alınmadı ("business farklı, saçma" — patron notu).
+   Ana sayfa hero'sundan farkı: sol hizalı, daha kompakt, tek CTA.
+   ----------------------------------------------------------- */
+.subpage-hero {
+  padding-top: calc(var(--nav-height) + var(--space-6));
+  padding-bottom: var(--space-6);
+  border-bottom: 1.5px solid var(--line);
+}
+
+.subpage-hero__eyebrow {
+  width: 120px;
+  height: 14px;
+  background: var(--placeholder);
+  border-radius: 3px;
+  margin-bottom: var(--space-2);
+}
+
+.subpage-hero__headline {
+  width: 55%;
+  height: 64px;
+  background: var(--placeholder-strong);
+  border-radius: 8px;
+  margin-bottom: var(--space-2);
+}
+
+.subpage-hero__subtext {
+  width: 40%;
+  height: 24px;
+  background: var(--placeholder);
+  border-radius: 6px;
+  margin-bottom: var(--space-3);
+}
+
+.subpage-hero__cta {
+  width: 140px;
+  height: 40px;
+  background: var(--accent);
+  border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+  .subpage-hero__headline {
+    width: 90%;
+  }
+  .subpage-hero__subtext {
+    width: 80%;
+  }
+}
+
+/* -----------------------------------------------------------
+   4c. İÇERİK ALANI — boş bırakılıyor, sen dolduracaksın
+   ----------------------------------------------------------- */
+.subpage-content {
+  padding: var(--space-7) 0;
+  min-height: 400px;
+}
+
+.subpage-content__placeholder {
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  min-height: 360px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* -----------------------------------------------------------
+   5. FEATURE-SCROLL BÖLÜMÜ — YENİ KONSEPT (5 özellik)
+   Dify'nin pinned-panel mantığından esinlenilen ama farklı bir
+   görsel dil: ekranın tamamı sticky viewport. Sol %20 metin
+   (değişir), sağ %80 SABİT 4K arka plan + üzerinde crossfade
+   ile değişen ürün mockup'ı. Arka plan tüm 5 adım boyunca hiç
+   değişmez — sadece ön plan değişir.
+
+   Mekanik: outer section'ın yüksekliği (N × 100vh) scroll
+   mesafesi sağlıyor; içindeki .feature-scroll__sticky bu mesafe
+   boyunca ekrana kilitleniyor (position: sticky). Aktif adım,
+   deterministik getBoundingClientRect ölçümüyle hesaplanıyor
+   (ratio-tabanlı IntersectionObserver DEĞİL — bu projede daha
+   önce güvenilmez çıkmıştı).
+
+   768px altında: pin tamamen kapanır, düz stack olur.
+   ----------------------------------------------------------- */
+.feature-scroll {
+  position: relative;
+  /* page-frame'in dikey çizgileri (z-index:2) bu bölümde istenmiyor —
+     tam genişlikte, kendi arka planına sahip bir bölüm olduğu için
+     çizgiler yarım kalmış gibi duruyordu. Bölümü çizgilerin üzerine
+     çıkarıp görsel olarak kapatıyoruz. */
+  z-index: 3;
+  /* JS tarafından --feature-steps sayısına göre de ayarlanabilir;
+     şimdilik 4 adım × 100vh sabit (Career Pages kaldırıldı). */
+  height: 400vh;
+}
+
+.feature-scroll__sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+}
+
+.feature-scroll__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  /* Sarp'ın vereceği dağ/deniz fotoğrafı gelene kadar placeholder
+     gradient. --feature-scroll-bg-image dolduğunda otomatik devreye
+     girer (bkz. :root tanımı, styles.css tepesi). */
+  background-image:
+    var(--feature-scroll-bg-image),
+    radial-gradient(90% 70% at 85% 15%, rgba(227, 255, 143, 0.16) 0%, transparent 55%),
+    radial-gradient(70% 60% at 10% 90%, rgba(227, 255, 143, 0.10) 0%, transparent 55%),
+    linear-gradient(155deg, #0a0a0a 0%, #161616 50%, #0a0a0a 100%);
+  background-size: cover;
+  background-position: center;
+}
+
+/* Sol tarafta metin okunabilirliği için hafif karartma — gerçek
+   fotoğraf geldiğinde de metnin kontrastı korunacak */
+.feature-scroll__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.15) 28%, transparent 45%);
+  pointer-events: none;
+}
+
+.feature-scroll__frame {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 32% 68%;
+  width: 100%;
+  height: 100%;
+}
+
+/* Sol %20 — metin sütunu */
+.feature-scroll__text-col {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 var(--space-5) 0 var(--gutter);
+  color: #ffffff;
+}
+
+.feature-scroll__index {
+  display: block;
+  margin-bottom: var(--space-3);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.5);
+  font-variant-numeric: tabular-nums;
+}
+
+.feature-scroll__text-stack {
+  position: relative;
+  /* Absolute konumlanan text-item'lar kendi başlarına yükseklik
+     vermediği için bu min-height'ı EN UZUN başlık+gövde metnini
+     rahatça karşılayacak şekilde büyük tuttuk. Önceki 180px değeri
+     yetersizdi ve alttaki noktalar taşan metnin üzerine biniyordu. */
+  min-height: 300px;
+}
+
+.feature-scroll__text-item {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 420ms ease, transform 420ms ease;
+  pointer-events: none;
+}
+
+.feature-scroll__text-item.is-active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.feature-scroll__title {
+  margin: 0 0 var(--space-2);
+  font-size: clamp(20px, 1.8vw, 28px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  color: #ffffff;
+}
+
+.feature-scroll__body {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.feature-scroll__dots {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: var(--space-6);
+}
+
+.feature-scroll__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  transition: background 250ms ease, transform 250ms ease;
+}
+
+.feature-scroll__dot.is-active {
+  background: var(--accent);
+  transform: scale(1.3);
+}
+
+/* Sağ %80 — mockup görseli, arka planın üzerinde ortalanmış */
+.feature-scroll__mockup-col {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5);
+}
+
+/* -----------------------------------------------------------
+   Mockup kartları — gerçek dashboard yerine, tek bir etkileşime
+   odaklanan ama zengin içerikli, canlı animasyonlu kırpımlar.
+   Görsel değil, kod — iterasyon anlık.
+   ----------------------------------------------------------- */
+.mockup-card {
+  position: absolute;
+  width: 720px;
+  max-width: calc(100% - 80px);
+  background: #fff;
+  border-radius: 18px;
+  padding: 44px 48px;
+  box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  opacity: 0;
+  transform: translateY(12px) scale(0.98);
+  transition: opacity 320ms ease, transform 320ms ease;
+  font-size: 14px;
+  color: var(--fg);
+}
+
+.mockup-card.is-active {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.mockup-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.mockup-eyebrow-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 0 rgba(227, 255, 143, 0.7);
+  animation: mockup-pulse-dot 2s infinite;
+}
+
+.mockup-title {
+  margin: 0 0 4px;
+  font-weight: 700;
+  font-size: 17px;
+}
+
+.mockup-label {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.mockup-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 9px 18px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.mockup-btn--ghost {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--fg);
+}
+
+/* Adım 1 — İlan taslağı: yazı yazma animasyonu + kademeli etiket belirmesi */
+.mockup-input-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 12px 12px 16px;
+  margin-bottom: 20px;
+}
+
+.mockup-typing {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 2px solid var(--muted);
+  color: var(--fg);
+  font-size: 13px;
+  width: 0;
+  animation: mockup-typing 3.2s steps(34, end) infinite, mockup-caret 0.7s step-end infinite;
+}
+
+.mockup-generated-label {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.mockup-tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mockup-tag {
+  padding: 6px 12px;
+  background: var(--surface);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0;
+  animation: mockup-fade-up 400ms ease forwards;
+}
+
+.mockup-tag:nth-child(1) { animation-delay: 3.3s; }
+.mockup-tag:nth-child(2) { animation-delay: 3.5s; }
+.mockup-tag:nth-child(3) { animation-delay: 3.7s; }
+
+/* Adım 2 — Aday eşleşmesi: sıralı liste + sayaç animasyonu */
+.mockup-candidate-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.mockup-candidate {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+}
+
+.mockup-candidate--top {
+  border-color: var(--accent);
+  background: rgba(227, 255, 143, 0.12);
+  animation: mockup-highlight 2.6s ease-in-out infinite;
+}
+
+.mockup-name {
+  margin: 0 0 2px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.mockup-sub {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.mockup-badge {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mockup-badge--muted {
+  background: var(--surface);
+  color: var(--muted);
+}
+
+.mockup-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mockup-chip {
+  padding: 5px 10px;
+  background: var(--surface);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--fg);
+}
+
+/* Adım 3 — Takvim: seçili gün üzerinde nabız halkası + rezervasyon onayı */
+.mockup-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.mockup-cal-grid span {
+  font-size: 11px;
+  color: var(--muted);
+  padding: 4px 0;
+}
+
+.mockup-cal-day {
+  position: relative;
+  padding: 6px 0;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--fg);
+}
+
+.mockup-cal-day--muted {
+  color: #d9d9d9;
+}
+
+.mockup-cal-day--active {
+  background: var(--accent);
+  font-weight: 700;
+}
+
+.mockup-cal-day--active::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 8px;
+  border: 2px solid var(--accent);
+  animation: mockup-ring 1.8s ease-out infinite;
+}
+
+.mockup-cal-day--event::before {
+  content: "";
+  position: absolute;
+  bottom: 1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--fg);
+}
+
+.mockup-section-label {
+  margin: 20px 0 10px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.mockup-upcoming {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.mockup-upcoming-time {
+  margin: 0 0 2px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.mockup-upcoming-title {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.mockup-btn--join {
+  flex-shrink: 0;
+  animation: mockup-join-pulse 2.6s ease-in-out infinite;
+}
+
+@keyframes mockup-join-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(227, 255, 143, 0.6); }
+  50% { box-shadow: 0 0 0 6px rgba(227, 255, 143, 0); }
+}
+
+/* Adım 4 — AI görüşme özeti: gerçek Onbordo Decision Center diline
+   sadık, referans "Call recording" panelinin birebir uyarlaması */
+.mockup-decision-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.mockup-meta {
+  margin: 0 0 20px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.mockup-insight-box {
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-bottom: 12px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.mockup-insight-box strong {
+  color: var(--fg);
+}
+
+.mockup-insight-box:last-child {
+  margin-bottom: 0;
+}
+
+/* -----------------------------------------------------------
+   Animasyon tanımları
+   ----------------------------------------------------------- */
+@keyframes mockup-pulse-dot {
+  0% { box-shadow: 0 0 0 0 rgba(227, 255, 143, 0.7); }
+  70% { box-shadow: 0 0 0 6px rgba(227, 255, 143, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(227, 255, 143, 0); }
+}
+
+@keyframes mockup-typing {
+  0% { width: 0; }
+  55% { width: 100%; }
+  85% { width: 100%; }
+  95% { width: 0; }
+  100% { width: 0; }
+}
+
+@keyframes mockup-caret {
+  0%, 100% { border-color: var(--muted); }
+  50% { border-color: transparent; }
+}
+
+@keyframes mockup-fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes mockup-highlight {
+  0%, 100% { background: rgba(227, 255, 143, 0.12); }
+  50% { background: rgba(227, 255, 143, 0.28); }
+}
+
+@keyframes mockup-ring {
+  0% { transform: scale(0.9); opacity: 1; }
+  100% { transform: scale(1.25); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mockup-eyebrow-dot,
+  .mockup-btn--join,
+  .mockup-typing,
+  .mockup-tag,
+  .mockup-candidate--top,
+  .mockup-cal-day--active::after {
+    animation: none !important;
+  }
+  .mockup-typing {
+    width: auto;
+    border-right: none;
+  }
+  .mockup-tag {
+    opacity: 1;
+  }
+}
+/* -----------------------------------------------------------
+   Mobilde pin mekaniği TAMAMEN kapanır — JS'e bağımlı kalmadan
+   çalışması için 4 metnin TAMAMI normal akışta, numaralı bir
+   liste gibi art arda gösterilir. Mockup görselleri (crossfade +
+   scroll senkronizasyonu masaüstüne özgü olduğundan) mobilde
+   sadeleştirme adına gizlenir — metin, özelliği tek başına
+   anlatacak şekilde yazıldı.
+   ----------------------------------------------------------- */
+@media (max-width: 768px) {
+  .feature-scroll {
+    height: auto;
+    background: linear-gradient(155deg, #0a0a0a 0%, #161616 50%, #0a0a0a 100%);
+  }
+  .feature-scroll__sticky {
+    position: static;
+    height: auto;
+    display: block;
+  }
+  .feature-scroll__frame {
+    grid-template-columns: 1fr;
+    height: auto;
+    display: block;
+  }
+  .feature-scroll__bg,
+  .feature-scroll__scrim,
+  .feature-scroll__mockup-col {
+    display: none;
+  }
+  .feature-scroll__text-col {
+    padding: var(--space-6) var(--gutter);
+  }
+  .feature-scroll__index {
+    display: none;
+  }
+  .feature-scroll__text-stack {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    padding-left: 24px;
+    border-left: 2px solid rgba(255, 255, 255, 0.18);
+  }
+  .feature-scroll__text-item {
+    position: relative;
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+  .feature-scroll__text-item::before {
+    content: "";
+    position: absolute;
+    left: -29px;
+    top: 6px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .feature-scroll__dots {
+    display: none;
+  }
+}
+
+/* -----------------------------------------------------------
+   6. STATS BAND
+   ----------------------------------------------------------- */
+/* Stats artık hero-viewport içinde, ayrı bir tam-genişlik section
+   değil — kompakt bir bant. Vanta fog'un koyu zemini üzerinde
+   okunabilir olması için metin renkleri açık tonlara çevrildi. */
+.stats {
+  position: relative;
+  flex: 0 0 auto;
+  padding: var(--space-3) 0 var(--space-4);
+  z-index: 1;
+}
+
+.stats__eyebrow {
+  position: relative;
+  margin: 0 0 var(--space-3);
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.55);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.stats__grid {
+  position: relative;
+  grid-template-columns: repeat(4, 1fr);
+  border-left: none;
+  border-right: none;
+  --line: rgba(255, 255, 255, 0.18);
+}
+
+.stat {
+  padding: var(--space-2) var(--space-3) var(--space-3);
+}
+
+.stat__icon {
+  width: 22px;
+  height: 22px;
+  color: rgba(255, 255, 255, 0.55);
+  margin-bottom: var(--space-2);
+  transition: transform 400ms cubic-bezier(.2,.8,.2,1), color 400ms ease;
+}
+
+.stat.is-counting .stat__icon {
+  color: #ffffff;
+  transform: translateY(-2px) scale(1.06);
+}
+
+.stat__value {
+  margin-bottom: 4px;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: #ffffff;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 400ms ease, transform 400ms ease;
+}
+
+.stat.is-counting .stat__value {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.stat__label {
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.stat__delta {
+  display: inline-flex;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.stat__delta--up {
+  background: rgba(227, 255, 143, 0.5);
+  color: #3a5a00;
+}
+
+.stat__delta--down {
+  background: #fbe4e4;
+  color: #a33a3a;
+}
+
+@media (max-width: 768px) {
+  .stats__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* -----------------------------------------------------------
+   6b. MACBOOK SCROLL — Aceternity UI'nin MacbookScroll bileşeninden
+   ilhamla, Framer Motion bağımlılığı olmadan vanilla JS/CSS'e
+   taşındı. Section yüksekliği scroll mesafesi sağlıyor; sticky
+   viewport içinde kapak (lid) aşağıdan menteşeliymiş gibi
+   rotateX ile açılıyor. Aktif açı, feature-scroll'da olduğu gibi
+   deterministik getBoundingClientRect ölçümüyle hesaplanıyor.
+   ----------------------------------------------------------- */
+.macbook-scroll {
+  position: relative;
+  z-index: 3; /* page-frame çizgilerini kapatmak için, feature-scroll'daki gibi */
+  /* 380vh: 300vh açılma animasyonu için, +80vh de tamamen açıldıktan
+     sonra kullanıcının biraz daha "nefes payı" scroll'u için (bkz.
+     app.js, ANIMATION_FRACTION — animasyon bu mesafenin sadece bir
+     kısmında tamamlanıyor, kalanı bekleme/dwell süresi). */
+  height: 380vh;
+  background: #0a0a0a;
+}
+
+.macbook-scroll__sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(24px, 5vw, 72px);
+  padding: 0 var(--gutter);
+  overflow: hidden;
+}
+
+/* MacBook'un soluna gelen yazı animasyonu bloğu — hero başlığındaki
+   aynı typewriter mekaniğini kullanıyor, ama kapak tamamen
+   açılmadan tetiklenmiyor (bkz. app.js, initMacbookScroll). */
+.macbook-scroll__text {
+  flex: 0 0 auto;
+  max-width: 340px;
+  color: #ffffff;
+}
+
+.macbook-scroll__title {
+  margin: 0 0 var(--space-2);
+  font-size: clamp(22px, 2.2vw, 32px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.macbook-scroll__body {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.macbook-scroll__scene {
+  perspective: 1600px;
+  perspective-origin: 50% 30%;
+}
+
+.macbook {
+  position: relative;
+  width: min(58vw, 760px);
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+@media (max-width: 900px) {
+  .macbook-scroll__sticky {
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--space-3);
+  }
+  .macbook-scroll__text {
+    max-width: 90vw;
+    text-align: center;
+  }
+  .macbook {
+    width: min(80vw, 760px);
+  }
+}
+
+.macbook__lid {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10.2;
+  background: linear-gradient(155deg, #2b2b2d 0%, #1a1a1c 100%);
+  border-radius: 16px 16px 5px 5px;
+  padding: 14px 14px 20px;
+  box-sizing: border-box;
+  transform-origin: bottom center;
+  transform: rotateX(80deg);
+  will-change: transform;
+  box-shadow: 0 40px 90px -25px rgba(0, 0, 0, 0.7);
+}
+
+.macbook__notch {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 26%;
+  height: 16px;
+  background: linear-gradient(155deg, #2b2b2d 0%, #1a1a1c 100%);
+  border-radius: 0 0 10px 10px;
+  z-index: 2;
+}
+
+.macbook__screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #000;
+}
+
+.macbook__screen--fallback {
+  background: linear-gradient(155deg, #16200a 0%, #0a0a0a 60%, #0a0a0a 100%);
+}
+
+.macbook__screen-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  /* Kapak dönerken çarpık/uzamış görünmesin diye foto başta gizli —
+     JS tarafından sadece ekran neredeyse tam açıldığında (--reveal
+     custom property ile) belirginleşiyor. */
+  opacity: var(--screen-reveal, 0);
+  transition: opacity 80ms linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .macbook__screen-img {
+    opacity: 1;
+  }
+}
+
+.macbook__base {
+  position: relative;
+  width: 108%;
+  margin-left: -4%;
+  aspect-ratio: 16 / 1.9;
+  background: linear-gradient(180deg, #3a3a3c 0%, #232325 60%, #1a1a1c 100%);
+  border-radius: 5px 5px 16px 16px;
+  box-shadow: 0 30px 70px -25px rgba(0, 0, 0, 0.55);
+}
+
+.macbook__keyboard {
+  position: absolute;
+  top: 10%;
+  left: 8%;
+  right: 8%;
+  height: 55%;
+  border-radius: 4px;
+  background: #101012;
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 0,
+    rgba(255, 255, 255, 0.05) 5.5%,
+    transparent 5.5%,
+    transparent 7%
+  );
+}
+
+.macbook__trackpad {
+  position: absolute;
+  bottom: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24%;
+  height: 26%;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+}
+
+@media (max-width: 768px) {
+  .macbook-scroll {
+    height: 200vh;
+  }
+  .macbook {
+    width: 88vw;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .macbook__lid {
+    transform: rotateX(0deg) !important;
+  }
+}
+
+/* -----------------------------------------------------------
+   7. FEATURE GRID (6 kart) — tam genişlikte aurora fonu üzerinde
+   beyaz panel (Dify "Production Ready" bölümünün deseni).
+   Fotoğraf: Jonny Gios, "Aurora borealis over snow-capped
+   mountains" — Vestrahorn, İzlanda. Unsplash Lisansı, ücretsiz
+   ticari kullanım, atıf gerekmiyor.
+   ----------------------------------------------------------- */
+/* Footer'a geçmeden önce tam ekranda bir süre "kilitli" kalması için:
+   sarmalayıcı ekstra scroll mesafesi sağlıyor (100vh görünür +
+   %40 dwell), section kendisi sticky ile o mesafe boyunca sabit
+   kalıyor, sonra normal akışa dönüp footer'a bırakıyor. */
+.features-lock {
+  position: relative;
+  height: 140vh;
+  /* sticky .features bıraktıktan sonra kalan "dwell" boşluğu da
+     siyah kalsın diye — bg ve çizgi-kapatma z-index'i burada,
+     tüm 140vh'yi kaplayacak şekilde. */
+  background: #0a0a0a;
+  z-index: 3;
+}
+
+.features {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: var(--space-8) 0;
+  overflow: hidden;
+  /* page-frame'in dikey çizgileri (z-index:2) burada da istenmiyor —
+     feature-scroll'da yapılan aynı düzeltme: bölümü çizgilerin
+     üzerine çıkarıp görsel olarak kapatıyoruz. */
+  z-index: 3;
+}
+
+.features .container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .features-lock {
+    height: auto;
+  }
+  .features {
+    position: static;
+    height: auto;
+  }
+}
+
+.features__bg {
+  position: absolute;
+  inset: 0;
+  background: #0a0a0a;
+}
+
+.features__heading {
+  margin: 0 0 var(--space-5);
+  font-size: clamp(28px, 3vw, 40px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: #ffffff;
+  text-align: center;
+}
+
+.features__panel {
+  position: relative;
+  background: var(--bg);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.35);
+  padding: var(--space-4);
+}
+
+/* -----------------------------------------------------------
+   MagicBento tarzı imleç-takipli ışıklandırma. GSAP/React
+   bağımlılığı yok — vanilla JS ile CSS custom property'ler
+   (--glow-x/y/intensity) her mousemove'da güncelleniyor.
+   Marka rengine uyum için mor yerine lime kullanıldı.
+   ----------------------------------------------------------- */
+.bento-spotlight {
+  position: absolute;
+  width: 480px;
+  height: 480px;
+  left: 0;
+  top: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    circle,
+    rgba(163, 201, 60, 0.55) 0%,
+    rgba(163, 201, 60, 0.25) 35%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 300ms ease;
+  z-index: 0;
+}
+
+.bento-spotlight.is-active {
+  opacity: 1;
+}
+
+.bento {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+}
+
+.bento__card {
+  position: relative;
+  grid-column: span 1;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: var(--space-3);
+  overflow: hidden;
+  transition: transform 250ms cubic-bezier(.2,.8,.2,1), box-shadow 250ms ease, border-color 250ms ease;
+  --glow-x: 50%;
+  --glow-y: 50%;
+  --glow-intensity: 0;
+  --glow-radius: 220px;
+}
+
+.bento__card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1.5px;
+  border-radius: inherit;
+  background: radial-gradient(
+    var(--glow-radius) circle at var(--glow-x) var(--glow-y),
+    rgba(163, 201, 60, calc(var(--glow-intensity) * 1)) 0%,
+    rgba(163, 201, 60, calc(var(--glow-intensity) * 0.45)) 45%,
+    transparent 70%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.bento__card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 32px -16px rgba(0, 0, 0, 0.18);
+  border-color: rgba(228, 228, 231, 0.9);
+}
+
+.bento__card--wide {
+  grid-column: span 2;
+}
+
+.bento__visual {
+  height: 110px;
+  margin-bottom: var(--space-3);
+  padding: 14px;
+  border-radius: 10px;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.bento__icon {
+  width: 22px;
+  height: 22px;
+  color: var(--fg);
+  margin-bottom: 10px;
+}
+
+.bento__title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.bento__body {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+/* Adım 1 — AI Job Drafting: yazı yazma animasyonu */
+.bento__input-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 10px 9px 12px;
+  margin-bottom: 10px;
+}
+
+.bento__typing {
+  font-size: 12px;
+  color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  width: 0;
+  animation: bentoTyping 3.2s steps(34, end) infinite, bentoCaret 0.7s step-end infinite;
+  border-right: 2px solid var(--muted);
+}
+
+.bento__btn {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.bento__tag-row {
+  display: flex;
+  gap: 6px;
+}
+
+.bento__tag {
+  padding: 4px 9px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  opacity: 0;
+  animation: bentoFadeUp 400ms ease forwards;
+}
+
+.bento__tag--1 { animation-delay: 3.3s; }
+.bento__tag--2 { animation-delay: 3.5s; }
+.bento__tag--3 { animation-delay: 3.7s; }
+
+@keyframes bentoTyping {
+  0% { width: 0; }
+  55% { width: 100%; }
+  85% { width: 100%; }
+  95%, 100% { width: 0; }
+}
+
+@keyframes bentoCaret {
+  0%, 100% { border-color: var(--muted); }
+  50% { border-color: transparent; }
+}
+
+@keyframes bentoFadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Interview Scheduling — tam mockup-card'ın küçültülmüş hali:
+   haftagünleri satırı + gün satırı (aktif/etkinlik göstergeli) +
+   mini "upcoming" şeridi (Join call ile). */
+.bento__visual--cal {
+  justify-content: center;
+  gap: 6px;
+}
+
+.bento__cal-weekdays {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 1px;
+}
+
+.bento__cal-weekdays span {
+  width: 20px;
+  text-align: center;
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+.bento__cal-grid {
+  display: flex;
+  justify-content: space-between;
+}
+
+.bento__cal-day {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  font-size: 10px;
+  color: var(--fg);
+}
+
+.bento__cal-day--muted {
+  color: #d9d9d9;
+  border-color: transparent;
+}
+
+.bento__cal-day--active {
+  background: var(--accent);
+  border-color: var(--accent);
+  font-weight: 700;
+}
+
+.bento__cal-day--active::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 7px;
+  border: 1.5px solid var(--accent);
+  animation: bentoRing 1.8s ease-out infinite;
+}
+
+.bento__cal-day--event::before {
+  content: "";
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--fg);
+}
+
+@keyframes bentoRing {
+  0% { transform: scale(0.9); opacity: 1; }
+  100% { transform: scale(1.3); opacity: 0; }
+}
+
+.bento__cal-upcoming {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--bg);
+  border-radius: 6px;
+  padding: 5px 6px 5px 9px;
+}
+
+.bento__cal-upcoming-time {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bento__cal-upcoming-btn {
+  flex-shrink: 0;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  white-space: nowrap;
+  animation: bentoJoinPulse 2.6s ease-in-out infinite;
+}
+
+@keyframes bentoJoinPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(227, 255, 143, 0.6); }
+  50% { box-shadow: 0 0 0 4px rgba(227, 255, 143, 0); }
+}
+
+/* Smart Talent Search — aday sıralaması (dar kart, 2 satır) */
+.bento__visual--search {
+  justify-content: center;
+  gap: 4px;
+}
+
+.bento__candidate {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-radius: 7px;
+  margin-bottom: 4px;
+  font-size: 12px;
+}
+
+.bento__candidate:last-child {
+  margin-bottom: 0;
+}
+
+.bento__candidate--top {
+  background: rgba(227, 255, 143, 0.35);
+  animation: bentoHighlight 2.6s ease-in-out infinite;
+}
+
+@keyframes bentoHighlight {
+  0%, 100% { background: rgba(227, 255, 143, 0.25); }
+  50% { background: rgba(227, 255, 143, 0.5); }
+}
+
+.bento__candidate-name {
+  font-weight: 600;
+}
+
+.bento__candidate-badge {
+  padding: 2px 8px;
+  background: var(--accent);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.bento__candidate-badge--muted {
+  background: var(--bg);
+  color: var(--muted);
+  border: 1px solid var(--line);
+}
+
+/* Adım 5 — Decision Center: dolan güven çubuğu */
+.bento__confidence-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.bento__confidence-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.bento__confidence-value {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.bento__confidence-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.bento__confidence-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+  width: 0%;
+  animation: bentoConfidence 3s ease-out infinite;
+}
+
+@keyframes bentoConfidence {
+  0% { width: 0%; }
+  60%, 100% { width: 92%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bento__typing,
+  .bento__tag,
+  .bento__cal-day--active::after,
+  .bento__cal-upcoming-btn,
+  .bento__candidate--top,
+  .bento__confidence-fill {
+    animation: none !important;
+  }
+  .bento__typing { width: auto; border-right: none; }
+  .bento__tag { opacity: 1; }
+  .bento__confidence-fill { width: 92%; }
+}
+
+@media (max-width: 768px) {
+  .bento {
+    grid-template-columns: 1fr;
+  }
+  .bento__card--wide {
+    grid-column: span 1;
+  }
+}
+
+/* -----------------------------------------------------------
+   8. FOOTER
+   Dify'ın 4 kolonlu yapısı: Resources / Company / Programs /
+   Terms & Policies + sosyal ikon satırı + copyright.
+   ----------------------------------------------------------- */
+.footer {
+  position: relative;
+  z-index: 3; /* page-frame çizgilerini kapatmak için, diğer koyu bölümlerdeki gibi */
+  background: #0a0a0a;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.12);
+  padding: var(--space-6) 0 var(--space-4);
+}
+
+.footer__grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--space-4);
+  padding-bottom: var(--space-5);
+}
+
+.footer__brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ffffff;
+  margin-bottom: var(--space-2);
+}
+
+.footer__brand-icon {
+  width: 24px;
+  height: auto;
+  display: block;
+  /* logo.png koyu renkli — siyah footer zemininde görünmesi için
+     beyaza çevriliyor (nav'daki aynı çözüm). */
+  filter: brightness(0) invert(1);
+}
+
+.footer__brand-text {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.footer__tagline {
+  max-width: 260px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.footer__link {
+  display: block;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: none;
+  margin-bottom: 10px;
+}
+
+.footer__link:hover {
+  color: #ffffff;
+}
+
+.footer__bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.12);
+  padding-top: var(--space-3);
+}
+
+.footer__social {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.footer__social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  transition: background 150ms ease;
+}
+
+.footer__social-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.footer__social-link svg {
+  width: 16px;
+  height: 16px;
+}
+
+.footer__copyright {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+@media (max-width: 768px) {
+  .footer__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* -----------------------------------------------------------
+   9. SKELETON ETİKETLERİ
+   Sadece bu aşamada görünür — hangi bloğun ne olduğunu
+   okumak için. Aşama 3'te tamamen kaldırılacak.
+   ----------------------------------------------------------- */
+.tag {
+  position: absolute;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 2px 6px;
+  transform: translateY(-100%);
+  margin-top: -6px;
+}
+
+.section-anchor {
+  position: relative;
+}
+
+/* -----------------------------------------------------------
+   10. ÖZEL İMLEÇ — mavi, cartoon görünümlü, fareyi yumuşak bir
+   gecikmeyle (lerp) takip eder. Sadece gerçek fare + hover
+   desteği olan cihazlarda aktif; dokunmatik ekranlarda ve
+   prefers-reduced-motion'da native imleç korunur.
+   ----------------------------------------------------------- */
+@media (hover: hover) and (pointer: fine) {
+  body {
+    cursor: none;
+  }
+  a,
+  button,
+  .btn-ph,
+  [role="button"] {
+    cursor: none;
+  }
+}
+
+.custom-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.custom-cursor.is-visible {
+  opacity: 1;
+}
+
+.custom-cursor__inner {
+  width: 30px;
+  height: 30px;
+  transition: transform 120ms ease;
+  transform-origin: 6px 4px;
+}
+
+.custom-cursor.is-pressed .custom-cursor__inner {
+  transform: scale(0.82);
+}
+
+.custom-cursor svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 3px 6px rgba(30, 64, 175, 0.35));
+}
