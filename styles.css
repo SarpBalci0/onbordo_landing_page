@@ -101,7 +101,7 @@ body {
 }
 
 /* -----------------------------------------------------------
-   3b. SAYFA ÇERÇEVESİ — hero'dan footer'a kadar kesintisiz iki
+   3. SAYFA ÇERÇEVESİ — hero'dan footer'a kadar kesintisiz iki
    dikey çizgi. Her section kendi dış çizgisini ayrı ayrı
    çizmek yerine (dikiş/kayma riski), tek bir kaynaktan geliyor.
    Container'la aynı --gutter değerini kullanıyor, bu yüzden
@@ -135,11 +135,13 @@ body {
 }
 
 /* -----------------------------------------------------------
-   3. NAV
-   Üç davranış durumu:
-   a) .nav--visible   → normal, en üstte
-   b) .nav--hidden     → aşağı scroll'da yukarı kayıp gizlenir
-   c) .nav--secondary  → sticky-scroll bölümünde ikincil nav'a döner
+   4. NAV
+   İki durum:
+   a) normal (class yok)  → sadece sayfanın en tepesinde görünür
+   b) .nav--hidden          → herhangi bir yere kaydırılınca gizlenir,
+                              yön fark etmez, sadece scroll konumu
+   Sticky-scroll bölümüne girilince ayrıca .nav-secondary devreye
+   girer (bkz. app.js, initFeatureScroll).
    ----------------------------------------------------------- */
 .nav {
   position: fixed;
@@ -284,13 +286,13 @@ body {
 }
 
 /* -----------------------------------------------------------
-   4. HERO
+   5. HERO
    Dify pricing hero'sunun grid mantığı: sola yaslı metin +
    dikey çizgilerle bölünmüş boş kolonlar. Çerçeveli kutu
    yaklaşımı terk edildi.
    ----------------------------------------------------------- */
 /* -----------------------------------------------------------
-   3c. HERO-VIEWPORT — hero + stats bandını TEK 100vh ekranda
+   6. HERO-VIEWPORT — hero + stats bandını TEK 100vh ekranda
    birleştiren sarmalayıcı. Arka plan, sitenin geri kalanıyla
    (MacBook scroll, footer) aynı düz koyu gradyan — OGL particles
    ("galaksi") efekti kaldırıldı. Sayfa açılır açılmaz kullanıcı
@@ -371,232 +373,6 @@ body {
   background: var(--line);
 }
 
-.hero__mark {
-  margin: 0;
-  z-index: 2;
-}
-
-.hero__mark-icon {
-  width: 64px;
-  height: auto;
-  display: block;
-  transform-origin: center;
-  animation: heroMarkPulse 6s ease-in-out infinite;
-}
-
-@keyframes heroMarkPulse {
-  0% { transform: scale(1) rotate(0deg); }
-  50% { transform: scale(1.1) rotate(180deg); }
-  100% { transform: scale(1) rotate(360deg); }
-}
-
-/* Yüzen ürün kartları — hero'ya derinlik katmak için */
-.hero__float {
-  position: absolute;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(228, 228, 231, 0.8);
-  border-radius: 14px;
-  box-shadow: 0 20px 40px -16px rgba(0, 0, 0, 0.18);
-  z-index: 3;
-}
-
-.hero__float--candidate {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 16px;
-  top: 0;
-  right: 0;
-  transform: rotate(-3deg);
-  animation: heroFloatBob 7s ease-in-out infinite;
-}
-
-.hero__float-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--placeholder-strong);
-  flex-shrink: 0;
-}
-
-.hero__float-name {
-  margin: 0;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.hero__float-role {
-  margin: 0;
-  font-size: 11px;
-  color: var(--muted);
-}
-
-.hero__float-badge {
-  margin-left: 6px;
-  padding: 3px 8px;
-  background: var(--accent);
-  color: var(--accent-fg);
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.hero__float--pipeline {
-  padding: 14px 18px;
-  top: 110px;
-  right: 0;
-  transform: rotate(3deg);
-  animation: heroFloatBob 8s ease-in-out infinite 1.2s;
-}
-
-.hero__float-label {
-  margin: 0 0 8px;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.hero__float-stages {
-  display: flex;
-  gap: 4px;
-}
-
-.hero__float-stage {
-  width: 22px;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--surface);
-}
-
-.hero__float-stage--done {
-  background: var(--accent);
-}
-
-.hero__float-stage--active {
-  background: var(--accent);
-  opacity: 0.5;
-}
-
-@keyframes heroFloatBob {
-  0%, 100% { transform: translateY(0) rotate(var(--rot, 0deg)); }
-  50% { transform: translateY(-8px) rotate(var(--rot, 0deg)); }
-}
-
-.hero__float--candidate { --rot: -3deg; }
-.hero__float--pipeline { --rot: 3deg; }
-
-.hero__float--ai {
-  padding: 14px 16px;
-  width: 175px;
-  top: 110px;
-  left: 4px;
-  transform: rotate(2deg);
-  animation: heroFloatBob 9s ease-in-out infinite 0.6s;
-  --rot: 2deg;
-}
-
-.hero__float-ai-text {
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.4;
-  color: var(--fg);
-}
-
-.hero__float--notif {
-  width: 235px;
-  padding: 14px 16px;
-  top: 230px;
-  left: 52px;
-  transform: rotate(-2deg);
-  animation: heroFloatBob 8.5s ease-in-out infinite 1.8s;
-  --rot: -2deg;
-}
-
-.hero__notif-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  overflow: hidden;
-  max-height: 116px;
-}
-
-.hero__notif-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  opacity: 0;
-  transform: translateY(-10px);
-  animation: heroNotifIn 400ms ease forwards;
-}
-
-@keyframes heroNotifIn {
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.hero__notif-icon {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--surface);
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.hero__notif-icon svg {
-  width: 11px;
-  height: 11px;
-  color: var(--fg);
-}
-
-.hero__notif-text {
-  min-width: 0;
-}
-
-.hero__notif-title {
-  margin: 0;
-  font-size: 11px;
-  font-weight: 700;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.hero__notif-body {
-  margin: 0;
-  font-size: 10px;
-  color: var(--muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero__float--candidate,
-  .hero__float--pipeline,
-  .hero__mark-icon {
-    animation: none;
-  }
-}
-
-@media (max-width: 900px) {
-  .hero__float {
-    display: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero__mark-icon {
-    animation: none;
-  }
-}
-
 .hero__grid {
   --line: rgba(255, 255, 255, 0.22);
 }
@@ -651,7 +427,7 @@ body {
 }
 
 /* -----------------------------------------------------------
-   4b. ALT SAYFA HERO ŞABLONU (Product/Solutions/Resources/Pricing ortak)
+   7. ALT SAYFA HERO ŞABLONU (Product/Solutions/Resources/Pricing ortak)
    Dify pricing sayfasının SADECE üst kısmı — plan kartları/toggle
    alınmadı ("business farklı, saçma" — patron notu).
    Ana sayfa hero'sundan farkı: sol hizalı, daha kompakt, tek CTA.
@@ -703,7 +479,7 @@ body {
 }
 
 /* -----------------------------------------------------------
-   4c. İÇERİK ALANI — boş bırakılıyor, sen dolduracaksın
+   8. İÇERİK ALANI — boş bırakılıyor, sen dolduracaksın
    ----------------------------------------------------------- */
 .subpage-content {
   padding: var(--space-7) 0;
@@ -722,7 +498,7 @@ body {
 }
 
 /* -----------------------------------------------------------
-   5. FEATURE-SCROLL BÖLÜMÜ — YENİ KONSEPT (5 özellik)
+   9. FEATURE-SCROLL BÖLÜMÜ (4 özellik)
    Dify'nin pinned-panel mantığından esinlenilen ama farklı bir
    görsel dil: ekranın tamamı sticky viewport. Sol %20 metin
    (değişir), sağ %80 SABİT 4K arka plan + üzerinde crossfade
@@ -951,12 +727,6 @@ body {
   font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
-}
-
-.mockup-btn--ghost {
-  background: transparent;
-  border: 1px solid var(--line);
-  color: var(--fg);
 }
 
 /* Adım 1 — İlan taslağı: yazı yazma animasyonu + kademeli etiket belirmesi */
@@ -1314,11 +1084,11 @@ body {
 }
 
 /* -----------------------------------------------------------
-   6. STATS BAND
+   10. STATS BAND
    ----------------------------------------------------------- */
 /* Stats artık hero-viewport içinde, ayrı bir tam-genişlik section
-   değil — kompakt bir bant. Vanta fog'un koyu zemini üzerinde
-   okunabilir olması için metin renkleri açık tonlara çevrildi. */
+   değil — kompakt bir bant. Koyu zemin üzerinde okunabilir olması
+   için metin renkleri açık tonlara çevrildi. */
 .stats {
   position: relative;
   flex: 0 0 auto;
@@ -1409,7 +1179,7 @@ body {
 }
 
 /* -----------------------------------------------------------
-   6b. MACBOOK SCROLL — Aceternity UI'nin MacbookScroll bileşeninden
+   11. MACBOOK SCROLL — Aceternity UI'nin MacbookScroll bileşeninden
    ilhamla, Framer Motion bağımlılığı olmadan vanilla JS/CSS'e
    taşındı. Section yüksekliği scroll mesafesi sağlıyor; sticky
    viewport içinde kapak (lid) aşağıdan menteşeliymiş gibi
@@ -1525,10 +1295,6 @@ body {
   background: #000;
 }
 
-.macbook__screen--fallback {
-  background: linear-gradient(155deg, #16200a 0%, #0a0a0a 60%, #0a0a0a 100%);
-}
-
 .macbook__screen-img {
   display: block;
   width: 100%;
@@ -1602,7 +1368,7 @@ body {
 }
 
 /* -----------------------------------------------------------
-   7. FEATURE GRID (6 kart) — tam genişlikte aurora fonu üzerinde
+   12. FEATURE GRID (4 kart) — tam genişlikte aurora fonu üzerinde
    beyaz panel (Dify "Production Ready" bölümünün deseni).
    Fotoğraf: Jonny Gios, "Aurora borealis over snow-capped
    mountains" — Vestrahorn, İzlanda. Unsplash Lisansı, ücretsiz
@@ -2089,7 +1855,7 @@ body {
 }
 
 /* -----------------------------------------------------------
-   8. FOOTER
+   13. FOOTER
    Dify'ın 4 kolonlu yapısı: Resources / Company / Programs /
    Terms & Policies + sosyal ikon satırı + copyright.
    ----------------------------------------------------------- */
@@ -2196,7 +1962,7 @@ body {
 }
 
 /* -----------------------------------------------------------
-   9. SKELETON ETİKETLERİ
+   14. SKELETON ETİKETLERİ
    Sadece bu aşamada görünür — hangi bloğun ne olduğunu
    okumak için. Aşama 3'te tamamen kaldırılacak.
    ----------------------------------------------------------- */
@@ -2219,7 +1985,7 @@ body {
 }
 
 /* -----------------------------------------------------------
-   10. ÖZEL İMLEÇ — mavi, cartoon görünümlü, fareyi yumuşak bir
+   15. ÖZEL İMLEÇ — mavi, cartoon görünümlü, fareyi yumuşak bir
    gecikmeyle (lerp) takip eder. Sadece gerçek fare + hover
    desteği olan cihazlarda aktif; dokunmatik ekranlarda ve
    prefers-reduced-motion'da native imleç korunur.

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Onbordo — Skeleton (Aşama 1)</title>
+<title>Onbordo — The applicant tracking system built for growing teams</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -28,12 +28,12 @@
   </div>
 </nav>
 
-<!-- İkincil nav — sadece pinned-section görünürken .is-active olur -->
+<!-- İkincil nav — sadece feature-scroll bölümü görünürken .is-active olur -->
 <div class="nav-secondary">
   <div class="container">
     <span class="nav-secondary__step" lang="en">Job Drafting</span>
-    <span class="nav-secondary__step" lang="en">Scheduling</span>
     <span class="nav-secondary__step" lang="en">Talent Search</span>
+    <span class="nav-secondary__step" lang="en">Scheduling</span>
     <span class="nav-secondary__step" lang="en">Decisions</span>
   </div>
 </div>
@@ -102,21 +102,19 @@
   </div><!-- /.hero-viewport -->
 
   <!-- ============================================================
-       FEATURE-SCROLL — YENİ KONSEPT (5 özellik).
-       Dify'nin pinned-panel mantığından esinlenilen ama farklı bir
-       görsel dil: sol %20 metin, sağ %80 sabit 4K arka plan +
-       üzerinde değişen ürün mockup'ı. Arka plan tüm 5 adım boyunca
+       FEATURE-SCROLL — sol %20 metin, sağ %80 sabit 4K arka plan +
+       üzerinde değişen ürün mockup'ı. Dify'nin pinned-panel
+       mantığından esinlenildi ama arka plan tüm 4 adım boyunca
        SABİT kalır — sadece ön plandaki mockup + sol metin değişir.
 
        Arka plan görseli (dağ/deniz manzarası) HENÜZ YOK — placeholder
-       gradient kullanılıyor. Sarp fotoğrafı verdiğinde tek satır:
+       gradient kullanılıyor. Gerçek fotoğraf geldiğinde tek satır:
        --feature-scroll-bg-image değişkenini güncellemek yeterli
        (bkz. styles.css, :root tanımı).
 
        768px altında pin mekaniği tamamen kapanır, düz stack olur.
        ============================================================ -->
   <section class="feature-scroll section-anchor" data-feature-scroll>
-    <span class="tag">Sticky-scroll — yeni konsept (5 özellik)</span>
     <div class="feature-scroll__sticky">
       <div class="feature-scroll__bg"></div>
       <div class="feature-scroll__scrim"></div>
@@ -131,12 +129,12 @@
               <p class="feature-scroll__body">Describe the role in plain language. Onbordo drafts a complete job posting in seconds — title, requirements, and tone, ready to review.</p>
             </div>
             <div class="feature-scroll__text-item" data-feature-text="1" lang="en">
-              <h3 class="feature-scroll__title">Interviews without leaving Onbordo</h3>
-              <p class="feature-scroll__body">See every interview across your team in one calendar. Book, reschedule, and avoid double-bookings without leaving Onbordo.</p>
-            </div>
-            <div class="feature-scroll__text-item" data-feature-text="2" lang="en">
               <h3 class="feature-scroll__title">Find the right candidate, faster</h3>
               <p class="feature-scroll__body">Search your entire talent pool the way you'd ask a colleague. Describe who you need in plain English and get the answer instantly.</p>
+            </div>
+            <div class="feature-scroll__text-item" data-feature-text="2" lang="en">
+              <h3 class="feature-scroll__title">Interviews without leaving Onbordo</h3>
+              <p class="feature-scroll__body">See every interview across your team in one calendar. Book, reschedule, and avoid double-bookings without leaving Onbordo.</p>
             </div>
             <div class="feature-scroll__text-item" data-feature-text="3" lang="en">
               <h3 class="feature-scroll__title">Decisions your team can trust</h3>
@@ -170,8 +168,42 @@
             </div>
           </div>
 
-          <!-- Adım 1 — Interview Scheduling -->
+          <!-- Adım 1 — Smart Talent Search -->
           <div class="mockup-card" data-step="1">
+            <p class="mockup-eyebrow" lang="en"><span class="mockup-eyebrow-dot"></span>Smart Talent Search</p>
+            <p class="mockup-title">Top matches, ranked automatically</p>
+            <div class="mockup-candidate-list">
+              <div class="mockup-candidate mockup-candidate--top">
+                <div>
+                  <p class="mockup-name">Priya Patel</p>
+                  <p class="mockup-sub">Senior Frontend Engineer</p>
+                </div>
+                <span class="mockup-badge">92%</span>
+              </div>
+              <div class="mockup-candidate">
+                <div>
+                  <p class="mockup-name">Alex Chen</p>
+                  <p class="mockup-sub">Frontend Engineer</p>
+                </div>
+                <span class="mockup-badge mockup-badge--muted">85%</span>
+              </div>
+              <div class="mockup-candidate">
+                <div>
+                  <p class="mockup-name">Jordan Lee</p>
+                  <p class="mockup-sub">Product Designer</p>
+                </div>
+                <span class="mockup-badge mockup-badge--muted">78%</span>
+              </div>
+            </div>
+            <div class="mockup-chips">
+              <span class="mockup-chip">React</span>
+              <span class="mockup-chip">TypeScript</span>
+              <span class="mockup-chip">Design systems</span>
+            </div>
+          </div>
+
+          <!-- Adım 2 — Interview Scheduling -->
+          <div class="mockup-card" data-step="2">
             <p class="mockup-eyebrow" lang="en"><span class="mockup-eyebrow-dot"></span>Interview Scheduling</p>
             <p class="mockup-title">July 2026</p>
             <div class="mockup-cal-grid">
@@ -222,40 +254,6 @@
             </div>
           </div>
 
-          <!-- Adım 2 — Smart Talent Search -->
-          <div class="mockup-card" data-step="2">
-            <p class="mockup-eyebrow" lang="en"><span class="mockup-eyebrow-dot"></span>Smart Talent Search</p>
-            <p class="mockup-title">Top matches, ranked automatically</p>
-            <div class="mockup-candidate-list">
-              <div class="mockup-candidate mockup-candidate--top">
-                <div>
-                  <p class="mockup-name">Priya Patel</p>
-                  <p class="mockup-sub">Senior Frontend Engineer</p>
-                </div>
-                <span class="mockup-badge">92%</span>
-              </div>
-              <div class="mockup-candidate">
-                <div>
-                  <p class="mockup-name">Alex Chen</p>
-                  <p class="mockup-sub">Frontend Engineer</p>
-                </div>
-                <span class="mockup-badge mockup-badge--muted">85%</span>
-              </div>
-              <div class="mockup-candidate">
-                <div>
-                  <p class="mockup-name">Jordan Lee</p>
-                  <p class="mockup-sub">Product Designer</p>
-                </div>
-                <span class="mockup-badge mockup-badge--muted">78%</span>
-              </div>
-            </div>
-            <div class="mockup-chips">
-              <span class="mockup-chip">React</span>
-              <span class="mockup-chip">TypeScript</span>
-              <span class="mockup-chip">Design systems</span>
-            </div>
-          </div>
-
           <!-- Adım 3 — Decision Center -->
           <div class="mockup-card" data-step="3">
             <p class="mockup-eyebrow" lang="en"><span class="mockup-eyebrow-dot"></span>Decision Center</p>
@@ -280,7 +278,6 @@
        görseli beliriyor. Tam ekran (100vh) sticky.
        ============================================================ -->
   <section class="macbook-scroll section-anchor" data-macbook-scroll>
-    <span class="tag">MacBook scroll — açılma animasyonu</span>
     <div class="macbook-scroll__sticky">
       <div class="macbook-scroll__text">
         <h3 class="macbook-scroll__title" data-typewriter-target="macbook-title">Everything in one place.</h3>

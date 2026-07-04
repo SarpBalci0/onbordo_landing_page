@@ -1,15 +1,17 @@
 /* ============================================================
-   ONBORDO — SKELETON DAVRANIŞLARI
-   [REV: macbook-v4 — açı: kapalı=80deg, açık=0deg. Konsolda
-   "app.js REV: macbook-v4" görmüyorsan eski/cache'lenmiş bir
-   app.js yükleniyordur — hard refresh yap (Cmd/Ctrl+Shift+R).]
-   1) Nav: aşağı scroll'da gizlenir, yukarıda geri gelir
-   2) Sticky-scroll bölümüne girilince nav → nav-secondary
-   3) Sticky-scroll adımları arasında aktif adım takibi
-   Hepsi mobil breakpoint'in (768px) üstünde çalışır;
-   altında pin mekaniği tamamen kapanır.
+   ONBORDO — app.js
+   Sayfa davranışları, sıralı bölüm numaralarıyla:
+   1) Nav: sadece sayfanın en tepesindeyken görünür
+   2)+3) Feature-scroll: 4 özellikli sticky-scroll vitrin
+   4) MacBook scroll: kapak açılma animasyonu
+   5) Kapanış grid'i: imleç-takipli ışıklandırma (MagicBento ilhamlı)
+   6) Yazma (typewriter) animasyonu — hero başlığı + MacBook metni
+   7) Özel imleç — mavi, cartoon SVG
+   8) Stats band sayaçları
+
+   Sticky-scroll mekanikleri (2, 4) mobil breakpoint'in (768px)
+   üstünde çalışır; altında pin mekaniği tamamen kapanır.
    ============================================================ */
-console.log("app.js REV: macbook-v4 yüklendi");
 
 const STICKY_BREAKPOINT = "(min-width: 769px)";
 const mq = window.matchMedia(STICKY_BREAKPOINT);
@@ -46,7 +48,7 @@ function initNavScroll() {
 }
 
 /* -----------------------------------------------------------
-   2) + 3) FEATURE-SCROLL BÖLÜMÜ (yeni konsept, 5 özellik)
+   2) + 3) FEATURE-SCROLL BÖLÜMÜ (4 özellik)
    Eskisinden farklı olarak burada tek bir sticky panel var;
    içindeki metin + mockup, kullanıcı outer section'ı kaydırdıkça
    birlikte crossfade ile değişiyor. Arka plan hiç değişmiyor.
@@ -186,7 +188,6 @@ document.addEventListener("DOMContentLoaded", () => {
   evaluateBreakpoint();
   mq.addEventListener("change", evaluateBreakpoint);
   initStatCounters();
-  initHeroNotifications();
   initCustomCursor();
   initHeroTypewriter();
   initBentoGlow();
@@ -194,13 +195,17 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 /* -----------------------------------------------------------
-   9) MACBOOK SCROLL — Aceternity UI'nin MacbookScroll bileşeninden
+   4) MACBOOK SCROLL — Aceternity UI'nin MacbookScroll bileşeninden
    ilhamla, Framer Motion'ın useScroll/useTransform'u yerine
    deterministik getBoundingClientRect ölçümü kullanılıyor (bu
    projede feature-scroll'da da aynı yaklaşım tercih edildi —
    ratio-tabanlı IntersectionObserver'dan daha öngörülebilir).
-   Section'ı kaydırdıkça kapak (lid) rotateX ile kapalıdan
-   (-102deg) açığa (-8deg) dönüyor.
+
+   Section'ı kaydırdıkça kapak (lid) rotateX ile kapalıdan (80deg —
+   dik açıyla katlı, ekran gizli) açığa (0deg — dönüşsüz, doğrudan
+   ekrana bakan) dönüyor. Foto ve sol taraftaki başlık/gövde metni,
+   kapak neredeyse tam açılana kadar görünmüyor (REVEAL_START /
+   TEXT_TRIGGER eşikleri) — dönüş sırasında çarpık görünmesinler diye.
    ----------------------------------------------------------- */
 function initMacbookScroll() {
   const section = document.querySelector("[data-macbook-scroll]");
@@ -306,7 +311,7 @@ function initMacbookScroll() {
 }
 
 /* -----------------------------------------------------------
-   8) KAPANIŞ GRID'İ — MagicBento tarzı imleç-takipli ışıklandırma.
+   5) KAPANIŞ GRID'İ — MagicBento tarzı imleç-takipli ışıklandırma.
    İki katman: (1) panel genelinde imleci takip eden yumuşak bir
    spotlight (kartların ARKASINDA, boşluklarda görünür), (2) her
    kartın kendi kenarında, imleç o karta yaklaştıkça beliren bir
@@ -400,7 +405,7 @@ function initBentoGlow() {
 }
 
 /* -----------------------------------------------------------
-   7) YAZMA (TYPEWRITER) ANİMASYONU — yeniden kullanılabilir çekirdek.
+   6) YAZMA (TYPEWRITER) ANİMASYONU — yeniden kullanılabilir çekirdek.
    React Bits'in "TextType" bileşeninden ilhamla, framer-motion/GSAP
    bağımlılığı olmadan vanilla JS'e taşındı. Hem hero başlığı hem de
    MacBook bölümündeki başlık/gövde metni bunu kullanıyor.
@@ -476,7 +481,7 @@ function initHeroTypewriter() {
 }
 
 /* -----------------------------------------------------------
-   6) ÖZEL İMLEÇ — mavi, cartoon görünümlü SVG imleç.
+   7) ÖZEL İMLEÇ — mavi, cartoon görünümlü SVG imleç.
    Native cursor gizlenir (bkz. styles.css), yerine bu SVG fareyi
    basit bir lerp (linear interpolation) ile yumuşak bir gecikmeyle
    takip eder — framer-motion'daki spring hissine yakın, ama
@@ -557,80 +562,8 @@ function initCustomCursor() {
   requestAnimationFrame(render);
 }
 
-
 /* -----------------------------------------------------------
-   5) HERO — CANLI BİLDİRİM AKIŞI
-   Gerçek Onbordo bildirim içeriğinden (Notifications ekranı),
-   sırayla kayarak beliren bir liste. MagicUI'ın "Animated List"
-   deseninden ilham alındı, sade CSS/JS ile.
-   ----------------------------------------------------------- */
-function initHeroNotifications() {
-  const list = document.getElementById("hero-notif-list");
-  if (!list) return;
-
-  const notifications = [
-    {
-      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
-      title: "New application",
-      body: "Alex Chen applied to Senior Backend Engineer.",
-    },
-    {
-      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>',
-      title: "Pipeline update",
-      body: "Maria Santos moved to Interview stage.",
-    },
-    {
-      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
-      title: "Interview scheduled",
-      body: "Jordan Lee — tomorrow at 2:00 PM.",
-    },
-    {
-      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>',
-      title: "Offer sent",
-      body: "Offer letter sent to Sam Taylor.",
-    },
-  ];
-
-  let index = 0;
-  const VISIBLE = 3;
-
-  function renderItem(n) {
-    const item = document.createElement("div");
-    item.className = "hero__notif-item";
-    item.innerHTML = `
-      <span class="hero__notif-icon">${n.icon}</span>
-      <span class="hero__notif-text">
-        <p class="hero__notif-title">${n.title}</p>
-        <p class="hero__notif-body">${n.body}</p>
-      </span>
-    `;
-    return item;
-  }
-
-  function pushNext() {
-    const n = notifications[index % notifications.length];
-    index++;
-    list.prepend(renderItem(n));
-    while (list.children.length > VISIBLE) {
-      list.removeChild(list.lastChild);
-    }
-  }
-
-  // İlk 3 öğeyi hemen doldur, sonra periyodik olarak yenisini ekle
-  pushNext();
-  pushNext();
-  pushNext();
-
-  const prefersReducedMotion = window.matchMedia(
-    "(prefers-reduced-motion: reduce)"
-  ).matches;
-  if (!prefersReducedMotion) {
-    setInterval(pushNext, 2800);
-  }
-}
-
-/* -----------------------------------------------------------
-   4) STATS BAND — sayılar görünür alana girince 0'dan gerçek
+   8) STATS BAND — sayılar görünür alana girince 0'dan gerçek
    değere sayar (tek seferlik, prefers-reduced-motion'a saygılı).
    ----------------------------------------------------------- */
 function initStatCounters() {
